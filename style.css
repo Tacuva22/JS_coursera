@@ -1,0 +1,92 @@
+/* style.css - Estilos modernos para la lista de tareas */
+:root {
+  --bg-color: #f4f4f4;
+  --text-color: #333;
+  --accent-color: #1976d2;
+}
+
+/* Modo oscuro */
+.dark {
+  --bg-color: #222;
+  --text-color: #eee;
+  --accent-color: #90caf9;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: var(--bg-color);
+  color: var(--text-color);
+  transition: background 0.3s, color 0.3s;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1em;
+  background: var(--accent-color);
+  color: white;
+}
+
+.controls {
+  padding: 1em;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5em;
+}
+
+.new-task {
+  flex: 1;
+  display: flex;
+}
+
+.new-task input {
+  flex: 1;
+  margin-right: 0.5em;
+}
+
+.task-list {
+  list-style: none;
+  padding: 0;
+  margin: 1em;
+}
+
+.task-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(0,0,0,0.05);
+  padding: 0.5em;
+  margin-bottom: 0.5em;
+  border-radius: 4px;
+  transition: background 0.3s;
+}
+
+.task-list li.completed {
+  text-decoration: line-through;
+  color: gray;
+  background: rgba(0,0,0,0.1);
+}
+
+.task-list li .info {
+  flex: 1;
+}
+
+.task-list button {
+  margin-left: 0.25em;
+}
+
+.filters button.active {
+  font-weight: bold;
+}
+
+@media (max-width: 600px) {
+  .new-task {
+    flex-direction: column;
+  }
+  .new-task input {
+    margin-right: 0;
+    margin-bottom: 0.5em;
+  }
+}

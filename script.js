@@ -1,0 +1,220 @@
+/**
+ * script.js - Logica avanzada para la lista de tareas
+ * Permite agregar, editar, filtrar y ordenar tareas.
+ * Las tareas se guardan en localStorage y se mantiene un historial para deshacer.
+ */
+
+let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+let undoStack = [];
+let currentFilter = 'all';
+let sortBy = 'date';
+let searchText = '';
+
+// Elementos del DOM
+const taskInput = document.getElementById('taskInput');
+const categoryInput = document.getElementById('categoryInput');
+const addButton = document.getElementById('addButton');
+const taskList = document.getElementById('taskList');
+const searchInput = document.getElementById('searchInput');
+const filterButtons = document.querySelectorAll('.filter');
+const sortSelect = document.getElementById('sortSelect');
+const themeToggle = document.getElementById('themeToggle');
+const undoButton = document.getElementById('undoButton');
+const clearButton = document.getElementById('clearButton');
+const totalCount = document.getElementById('totalCount');
+const completedCount = document.getElementById('completedCount');
+const pendingCount = document.getElementById('pendingCount');
+
+/** Guarda las tareas en localStorage */
+function saveTasks() {
+  localStorage.setItem('tasks', JSON.stringify(tasks));
+}
+
+/** Guarda la preferencia de tema */
+function saveTheme() {
+  localStorage.setItem('darkMode', document.body.classList.contains('dark'));
+}
+
+/** Crea el elemento visual para una tarea */
+function createTaskElement(task) {
+  const li = document.createElement('li');
+  li.dataset.id = task.id;
+  if (task.completed) li.classList.add('completed');
+
+  const info = document.createElement('span');
+  info.className = 'info';
+  info.innerHTML = `<strong>${task.text}</strong> <small>[${task.category || 'General'}]</small> <em>${new Date(task.createdAt).toLocaleString()}</em>`;
+  li.appendChild(info);
+
+  const editBtn = document.createElement('button');
+  editBtn.textContent = 'Editar';
+  editBtn.addEventListener('click', () => editTask(task.id));
+
+  const completeBtn = document.createElement('button');
+  completeBtn.textContent = task.completed ? 'Deshacer' : 'Completar';
+  completeBtn.addEventListener('click', () => toggleTask(task.id));
+
+  const deleteBtn = document.createElement('button');
+  deleteBtn.textContent = 'Eliminar';
+  deleteBtn.addEventListener('click', () => removeTask(task.id));
+
+  li.append(editBtn, completeBtn, deleteBtn);
+  taskList.appendChild(li);
+}
+
+/** Muestra las tareas aplicando filtros y orden */
+function renderTasks() {
+  let filtered = tasks.filter(t => {
+    const matchFilter =
+      currentFilter === 'all' ||
+      (currentFilter === 'completed' && t.completed) ||
+      (currentFilter === 'pending' && !t.completed);
+    const matchText = t.text.toLowerCase().includes(searchText);
+    return matchFilter && matchText;
+  });
+
+  filtered.sort((a, b) => {
+    if (sortBy === 'name') return a.text.localeCompare(b.text);
+    if (sortBy === 'status') return a.completed === b.completed ? 0 : a.completed ? 1 : -1;
+    return a.createdAt - b.createdAt; // por fecha
+  });
+
+  taskList.innerHTML = '';
+  filtered.forEach(createTaskElement);
+
+  totalCount.textContent = `${tasks.length} totales`;
+  completedCount.textContent = `${tasks.filter(t => t.completed).length} completadas`;
+  pendingCount.textContent = `${tasks.filter(t => !t.completed).length} pendientes`;
+}
+
+/** Agrega una nueva tarea */
+function addTask() {
+  const text = taskInput.value.trim();
+  if (!text) return;
+  const task = {
+    id: Date.now(),
+    text,
+    category: categoryInput.value.trim(),
+    completed: false,
+    createdAt: Date.now()
+  };
+  tasks.push(task);
+  saveTasks();
+  renderTasks();
+  taskInput.value = '';
+  categoryInput.value = '';
+}
+
+/** Cambia el estado de completada de una tarea */
+function toggleTask(id) {
+  const task = tasks.find(t => t.id === id);
+  if (!task) return;
+  undoStack.push({ action: 'toggle', id });
+  task.completed = !task.completed;
+  saveTasks();
+  renderTasks();
+}
+
+/** Elimina una tarea */
+function removeTask(id) {
+  const index = tasks.findIndex(t => t.id === id);
+  if (index === -1) return;
+  const removed = tasks.splice(index, 1)[0];
+  undoStack.push({ action: 'delete', task: removed, index });
+  saveTasks();
+  renderTasks();
+}
+
+/** Edita el texto de una tarea */
+function editTask(id) {
+  const li = Array.from(taskList.children).find(el => +el.dataset.id === id);
+  const task = tasks.find(t => t.id === id);
+  if (!li || !task) return;
+
+  const input = document.createElement('input');
+  input.value = task.text;
+  li.querySelector('.info').replaceWith(input);
+  input.focus();
+
+  const saveEdit = () => {
+    const oldText = task.text;
+    task.text = input.value.trim();
+    undoStack.push({ action: 'edit', id, oldText });
+    saveTasks();
+    renderTasks();
+  };
+
+  input.addEventListener('blur', saveEdit);
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter') saveEdit();
+  });
+}
+
+/** Elimina todas las tareas */
+function clearAll() {
+  if (tasks.length === 0) return;
+  undoStack.push({ action: 'clear', tasks: [...tasks] });
+  tasks = [];
+  saveTasks();
+  renderTasks();
+}
+
+/** Deshace la ultima accion */
+function undo() {
+  const last = undoStack.pop();
+  if (!last) return;
+
+  if (last.action === 'delete') {
+    tasks.splice(last.index, 0, last.task);
+  } else if (last.action === 'toggle') {
+    const t = tasks.find(t => t.id === last.id);
+    if (t) t.completed = !t.completed;
+  } else if (last.action === 'edit') {
+    const t = tasks.find(t => t.id === last.id);
+    if (t) t.text = last.oldText;
+  } else if (last.action === 'clear') {
+    tasks = last.tasks;
+  }
+
+  saveTasks();
+  renderTasks();
+}
+
+/** Inicializa el tema oscuro/claro */
+function initTheme() {
+  if (localStorage.getItem('darkMode') === 'true') {
+    document.body.classList.add('dark');
+  }
+  themeToggle.addEventListener('click', () => {
+    document.body.classList.toggle('dark');
+    saveTheme();
+  });
+}
+
+// Eventos
+addButton.addEventListener('click', addTask);
+[taskInput, categoryInput].forEach(input =>
+  input.addEventListener('keydown', e => e.key === 'Enter' && addTask())
+);
+filterButtons.forEach(btn => btn.addEventListener('click', () => {
+  filterButtons.forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentFilter = btn.dataset.filter;
+  renderTasks();
+}));
+searchInput.addEventListener('input', e => {
+  searchText = e.target.value.toLowerCase();
+  renderTasks();
+});
+sortSelect.addEventListener('change', e => {
+  sortBy = e.target.value;
+  renderTasks();
+});
+undoButton.addEventListener('click', undo);
+clearButton.addEventListener('click', clearAll);
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'z') undo();
+});
+
+initTheme();
+renderTasks();
