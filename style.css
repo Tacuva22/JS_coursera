@@ -1,3 +1,4 @@
+
 /* style.css - Estilos modernos para la lista de tareas */
 :root {
   --bg-color: #f4f4f4;
@@ -90,3 +91,28 @@ body {
     margin-bottom: 0.5em;
   }
 }
+=======
+/*
+ * style.css - Estilos para la pagina de lista de tareas.
+ * Define la apariencia basica y las clases para tareas completadas.
+ */
+
+body {
+  font-family: Arial, sans-serif;
+}
+
+/* Clase que se aplica a las tareas finalizadas */
+.completed {
+  text-decoration: line-through;
+  color: gray;
+}
+
+/* Espacio ligero entre la caja de texto y los botones */
+#taskInput {
+  margin-right: 0.5em;
+}
+
+button {
+  margin-left: 0.25em;
+}
+
