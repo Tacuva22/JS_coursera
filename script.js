@@ -1,4 +1,5 @@
 /**
+
  * script.js - Logica avanzada para la lista de tareas
  * Permite agregar, editar, filtrar y ordenar tareas.
  * Las tareas se guardan en localStorage y se mantiene un historial para deshacer.
@@ -34,6 +35,7 @@ const priorityCtx = document.getElementById('priorityChart');
 let statusChart;
 let priorityChart;
 
+
 /** Guarda las tareas en localStorage */
 function saveTasks() {
   localStorage.setItem('tasks', JSON.stringify(tasks));
@@ -61,6 +63,12 @@ function createTaskElement(task) {
   info.className = 'info';
   const due = task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'N/A';
   info.innerHTML = `<strong>${task.text}</strong> <small>[${task.category || 'General'}]</small> <em>${new Date(task.createdAt).toLocaleString()}</em><br>Resp: ${task.responsible || '-'} | Imp: ${task.importance || '-'} | Pri: ${task.priority || '-'} | Promesa: ${due}`;
+
+  if (task.completed) li.classList.add('completed');
+
+  const info = document.createElement('span');
+  info.className = 'info';
+  info.innerHTML = `<strong>${task.text}</strong> <small>[${task.category || 'General'}]</small> <em>${new Date(task.createdAt).toLocaleString()}</em>`;
   li.appendChild(info);
 
   const editBtn = document.createElement('button');
@@ -142,6 +150,7 @@ function updateCharts() {
     },
     options: { responsive: false }
   });
+
 }
 
 /** Agrega una nueva tarea */
@@ -156,6 +165,7 @@ function addTask() {
     importance: importanceInput.value,
     priority: priorityInput.value,
     dueDate: dueDateInput.value,
+
     completed: false,
     createdAt: Date.now()
   };
@@ -168,6 +178,7 @@ function addTask() {
   importanceInput.value = 'Alta';
   priorityInput.value = 'Alta';
   dueDateInput.value = '';
+
 }
 
 /** Cambia el estado de completada de una tarea */
@@ -213,6 +224,11 @@ function editTask(id) {
     const due = prompt('Fecha promesa (YYYY-MM-DD)', task.dueDate || '');
     if (due !== null) task.dueDate = due;
     undoStack.push({ action: 'edit', id, oldTask });
+
+    const oldText = task.text;
+    task.text = input.value.trim();
+    undoStack.push({ action: 'edit', id, oldText });
+
     saveTasks();
     renderTasks();
   };
@@ -245,6 +261,9 @@ function undo() {
   } else if (last.action === 'edit') {
     const index = tasks.findIndex(t => t.id === last.id);
     if (index !== -1) tasks[index] = last.oldTask;
+    const t = tasks.find(t => t.id === last.id);
+    if (t) t.text = last.oldText;
+
   } else if (last.action === 'clear') {
     tasks = last.tasks;
   }
@@ -290,4 +309,75 @@ document.addEventListener('keydown', e => {
 });
 
 initTheme();
+
+ * script.js - Logica de la lista de tareas (Todo List)
+ * Permite agregar, completar y eliminar tareas.
+ * Las tareas se guardan en localStorage para mantenerlas entre recargas.
+ */
+
+// Cargar tareas almacenadas o iniciar con una lista vacia
+let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+
+// Referencias a elementos del DOM
+const taskInput = document.getElementById('taskInput');
+const taskList = document.getElementById('taskList');
+const addButton = document.getElementById('addButton');
+
+/**
+ * Muestra las tareas en la pagina.
+ */
+function renderTasks() {
+  taskList.innerHTML = '';
+  tasks.forEach((task, index) => {
+    const li = document.createElement('li');
+    li.textContent = task.text;
+
+    // Marcar visualmente la tarea completada
+    if (task.completed) {
+      li.classList.add('completed');
+    }
+
+    // Boton para completar o deshacer la tarea
+    const completeBtn = document.createElement('button');
+    completeBtn.textContent = task.completed ? 'Deshacer' : 'Completar';
+    completeBtn.addEventListener('click', () => {
+      tasks[index].completed = !tasks[index].completed;
+      saveTasks();
+      renderTasks();
+    });
+
+    // Boton para eliminar la tarea de la lista
+    const deleteBtn = document.createElement('button');
+    deleteBtn.textContent = 'Eliminar';
+    deleteBtn.addEventListener('click', () => {
+      tasks.splice(index, 1);
+      saveTasks();
+      renderTasks();
+    });
+
+    li.append(' ', completeBtn, ' ', deleteBtn);
+    taskList.appendChild(li);
+  });
+}
+
+/**
+ * Guarda las tareas actuales en localStorage.
+ */
+function saveTasks() {
+  localStorage.setItem('tasks', JSON.stringify(tasks));
+}
+
+// Registrar el evento para agregar nuevas tareas
+addButton.addEventListener('click', () => {
+  const text = taskInput.value.trim();
+  if (text) {
+    tasks.push({ text, completed: false });
+    saveTasks();
+    renderTasks();
+    taskInput.value = '';
+  }
+});
+
+// Mostrar tareas existentes al cargar la pagina
+
 renderTasks();
