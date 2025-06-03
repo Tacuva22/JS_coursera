@@ -1,5 +1,13 @@
 # JS_coursera Todo Example
 
+Este repositorio contiene ejemplos sencillos de HTML. Incluye una página `todo.html` con una pequeña lista de tareas.
+
+## Archivos
+- `todo.html` – Documento principal de la aplicación.
+- `style.css` – Estilos de la interfaz.
+- `script.js` – Lógica JavaScript para gestionar las tareas.
+
+## Uso
 Este repositorio contiene ejemplos sencillos de HTML. Se ha agregado una página `todo.html` para practicar JavaScript con una pequeña lista de tareas.
 
 ## Uso

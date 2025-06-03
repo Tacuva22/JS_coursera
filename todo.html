@@ -3,10 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <title>Todo List</title>
+
+  <!-- Estilos separados para mayor claridad -->
+  <link rel="stylesheet" href="style.css">
+
   <style>
     body { font-family: Arial, sans-serif; }
     .completed { text-decoration: line-through; color: gray; }
   </style>
+
 </head>
 <body>
   <h1>Todo List</h1>
@@ -15,6 +20,10 @@
   <button id="addButton">Agregar</button>
 
   <ul id="taskList"></ul>
+
+
+  <!-- Logica de la aplicacion en archivo externo -->
+  <script src="script.js"></script>
 
   <script>
     let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
@@ -68,5 +77,6 @@
 
     renderTasks();
   </script>
+
 </body>
 </html>
