@@ -1,14 +1,45 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Todo List</title>
+  <title>Lista de Tareas Avanzada</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <header class="header">
+    <h1>Lista de Tareas</h1>
+    <button id="themeToggle" aria-label="Alternar modo claro/oscuro">🌗</button>
+  </header>
+  <section class="controls">
+    <input type="text" id="searchInput" placeholder="Buscar...">
+    <div class="new-task">
+      <input type="text" id="taskInput" placeholder="Nueva tarea">
+      <input type="text" id="categoryInput" placeholder="Categoría">
+      <button id="addButton">Agregar</button>
+    </div>
+    <div class="filters">
+      <button data-filter="all" class="filter active">Todas</button>
+      <button data-filter="pending" class="filter">Pendientes</button>
+      <button data-filter="completed" class="filter">Completadas</button>
+    </div>
+    <div class="sorting">
+      <label for="sortSelect">Ordenar:</label>
+      <select id="sortSelect">
+        <option value="date">Fecha</option>
+        <option value="name">Nombre</option>
+        <option value="status">Estado</option>
+      </select>
+    </div>
+    <div class="actions">
+      <button id="undoButton">Deshacer</button>
+      <button id="clearButton">Eliminar Todo</button>
+    </div>
+  </section>
+  <section class="counters">
+    <span id="totalCount">0 totales</span> |
+    <span id="completedCount">0 completadas</span> |
+    <span id="pendingCount">0 pendientes</span>
+  </section>
 
-  <!-- Estilos separados para mayor claridad -->
-  <link rel="stylesheet" href="style.css">
-
-  <style>
-    body { font-family: Arial, sans-serif; }
+  <ul id="taskList" class="task-list"></ul>
     .completed { text-decoration: line-through; color: gray; }
   </style>
 
