@@ -1,82 +1,52 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Todo List</title>
-
-  <!-- Estilos separados para mayor claridad -->
+  <title>Lista de Tareas Avanzada</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="style.css">
-
-  <style>
-    body { font-family: Arial, sans-serif; }
-    .completed { text-decoration: line-through; color: gray; }
-  </style>
-
 </head>
 <body>
-  <h1>Todo List</h1>
+  <header class="header">
+    <h1>Lista de Tareas</h1>
+    <button id="themeToggle" aria-label="Alternar modo claro/oscuro">🌗</button>
+  </header>
 
-  <input type="text" id="taskInput" placeholder="Nueva tarea">
-  <button id="addButton">Agregar</button>
+  <section class="controls">
+    <input type="text" id="searchInput" placeholder="Buscar...">
+    <div class="new-task">
+      <input type="text" id="taskInput" placeholder="Nueva tarea">
+      <input type="text" id="categoryInput" placeholder="Categoría">
+      <button id="addButton">Agregar</button>
+    </div>
+    <div class="filters">
+      <button data-filter="all" class="filter active">Todas</button>
+      <button data-filter="pending" class="filter">Pendientes</button>
+      <button data-filter="completed" class="filter">Completadas</button>
+    </div>
+    <div class="sorting">
+      <label for="sortSelect">Ordenar:</label>
+      <select id="sortSelect">
+        <option value="date">Fecha</option>
+        <option value="name">Nombre</option>
+        <option value="status">Estado</option>
+      </select>
+    </div>
+    <div class="actions">
+      <button id="undoButton">Deshacer</button>
+      <button id="clearButton">Eliminar Todo</button>
+    </div>
+  </section>
 
-  <ul id="taskList"></ul>
+  <section class="counters">
+    <span id="totalCount">0 totales</span> |
+    <span id="completedCount">0 completadas</span> |
+    <span id="pendingCount">0 pendientes</span>
+  </section>
 
+  <ul id="taskList" class="task-list"></ul>
 
-  <!-- Logica de la aplicacion en archivo externo -->
   <script src="script.js"></script>
-
-  <script>
-    let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
-
-    const taskInput = document.getElementById('taskInput');
-    const taskList = document.getElementById('taskList');
-    const addButton = document.getElementById('addButton');
-
-    function renderTasks() {
-      taskList.innerHTML = '';
-      tasks.forEach((task, index) => {
-        const li = document.createElement('li');
-        li.textContent = task.text;
-        if (task.completed) {
-          li.classList.add('completed');
-        }
-        const completeBtn = document.createElement('button');
-        completeBtn.textContent = task.completed ? 'Deshacer' : 'Completar';
-        completeBtn.addEventListener('click', () => {
-          tasks[index].completed = !tasks[index].completed;
-          saveTasks();
-          renderTasks();
-        });
-
-        const deleteBtn = document.createElement('button');
-        deleteBtn.textContent = 'Eliminar';
-        deleteBtn.addEventListener('click', () => {
-          tasks.splice(index, 1);
-          saveTasks();
-          renderTasks();
-        });
-
-        li.append(' ', completeBtn, ' ', deleteBtn);
-        taskList.appendChild(li);
-      });
-    }
-
-    function saveTasks() {
-      localStorage.setItem('tasks', JSON.stringify(tasks));
-    }
-
-    addButton.addEventListener('click', () => {
-      const text = taskInput.value.trim();
-      if (text) {
-        tasks.push({ text, completed: false });
-        saveTasks();
-        renderTasks();
-        taskInput.value = '';
-      }
-    });
-
-    renderTasks();
-  </script>
 
 </body>
 </html>
