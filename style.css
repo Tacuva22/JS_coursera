@@ -42,6 +42,8 @@ body {
   display: flex;
 }
 
+
+.new-task select {
 .new-task input {
   flex: 1;
   margin-right: 0.5em;
@@ -69,6 +71,16 @@ body {
   color: gray;
   background: rgba(0,0,0,0.1);
 }
+.task-list li.overdue {
+  background: #ffcccc;
+}
+.task-list li.due-soon {
+  background: #fff3cd;
+}
+.task-list li.on-time {
+  background: #e6ffe6;
+}
+
 
 .task-list li .info {
   flex: 1;
@@ -90,8 +102,20 @@ body {
     margin-right: 0;
     margin-bottom: 0.5em;
   }
+  .new-task select {
+    margin-right: 0;
+    margin-bottom: 0.5em;
+  }
 }
-=======
+
+.charts {
+  display: flex;
+  justify-content: center;
+  gap: 1em;
+  margin: 1em;
+}
+
+}
 /*
  * style.css - Estilos para la pagina de lista de tareas.
  * Define la apariencia basica y las clases para tareas completadas.
@@ -115,4 +139,3 @@ body {
 button {
   margin-left: 0.25em;
 }
-

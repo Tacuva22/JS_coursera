@@ -14,6 +14,10 @@ let searchText = '';
 // Elementos del DOM
 const taskInput = document.getElementById('taskInput');
 const categoryInput = document.getElementById('categoryInput');
+const responsibleInput = document.getElementById('responsibleInput');
+const importanceInput = document.getElementById('importanceInput');
+const priorityInput = document.getElementById('priorityInput');
+const dueDateInput = document.getElementById('dueDateInput');
 const addButton = document.getElementById('addButton');
 const taskList = document.getElementById('taskList');
 const searchInput = document.getElementById('searchInput');
@@ -25,6 +29,12 @@ const clearButton = document.getElementById('clearButton');
 const totalCount = document.getElementById('totalCount');
 const completedCount = document.getElementById('completedCount');
 const pendingCount = document.getElementById('pendingCount');
+const statusCtx = document.getElementById('statusChart');
+const priorityCtx = document.getElementById('priorityChart');
+
+let statusChart;
+let priorityChart;
+
 
 /** Guarda las tareas en localStorage */
 function saveTasks() {
@@ -40,6 +50,20 @@ function saveTheme() {
 function createTaskElement(task) {
   const li = document.createElement('li');
   li.dataset.id = task.id;
+  if (task.completed) {
+    li.classList.add('completed');
+  } else {
+    const diff = task.dueDate ? (new Date(task.dueDate) - new Date()) / (1000 * 60 * 60 * 24) : Infinity;
+    if (diff < 0) li.classList.add('overdue');
+    else if (diff <= 2) li.classList.add('due-soon');
+    else li.classList.add('on-time');
+  }
+
+  const info = document.createElement('span');
+  info.className = 'info';
+  const due = task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'N/A';
+  info.innerHTML = `<strong>${task.text}</strong> <small>[${task.category || 'General'}]</small> <em>${new Date(task.createdAt).toLocaleString()}</em><br>Resp: ${task.responsible || '-'} | Imp: ${task.importance || '-'} | Pri: ${task.priority || '-'} | Promesa: ${due}`;
+
   if (task.completed) li.classList.add('completed');
 
   const info = document.createElement('span');
@@ -86,6 +110,47 @@ function renderTasks() {
   totalCount.textContent = `${tasks.length} totales`;
   completedCount.textContent = `${tasks.filter(t => t.completed).length} completadas`;
   pendingCount.textContent = `${tasks.filter(t => !t.completed).length} pendientes`;
+
+  updateCharts();
+}
+
+/** Actualiza las graficas de pastel */
+function updateCharts() {
+  if (!statusCtx || !priorityCtx) return;
+
+  const now = new Date();
+  const overdue = tasks.filter(t => !t.completed && t.dueDate && new Date(t.dueDate) < now).length;
+  const dueSoon = tasks.filter(t => !t.completed && t.dueDate && (new Date(t.dueDate) - now) / (1000*60*60*24) <= 2 && (new Date(t.dueDate) - now) >= 0).length;
+  const onTime = tasks.filter(t => !t.completed && (!t.dueDate || (new Date(t.dueDate) - now) / (1000*60*60*24) > 2)).length;
+  const completed = tasks.filter(t => t.completed).length;
+
+  const priorities = { Alta: 0, Media: 0, Baja: 0 };
+  tasks.forEach(t => {
+    if (t.priority && priorities[t.priority] !== undefined) {
+      priorities[t.priority]++;
+    }
+  });
+
+  if (statusChart) statusChart.destroy();
+  statusChart = new Chart(statusCtx, {
+    type: 'pie',
+    data: {
+      labels: ['Vencidas', 'Pronto', 'En tiempo', 'Completadas'],
+      datasets: [{ data: [overdue, dueSoon, onTime, completed], backgroundColor: ['#ff6666', '#ffcc66', '#66cc66', '#6699ff'] }]
+    },
+    options: { responsive: false }
+  });
+
+  if (priorityChart) priorityChart.destroy();
+  priorityChart = new Chart(priorityCtx, {
+    type: 'pie',
+    data: {
+      labels: Object.keys(priorities),
+      datasets: [{ data: Object.values(priorities), backgroundColor: ['#ff9999','#ffd699','#ffff99'] }]
+    },
+    options: { responsive: false }
+  });
+
 }
 
 /** Agrega una nueva tarea */
@@ -96,6 +161,11 @@ function addTask() {
     id: Date.now(),
     text,
     category: categoryInput.value.trim(),
+    responsible: responsibleInput.value.trim(),
+    importance: importanceInput.value,
+    priority: priorityInput.value,
+    dueDate: dueDateInput.value,
+
     completed: false,
     createdAt: Date.now()
   };
@@ -104,6 +174,11 @@ function addTask() {
   renderTasks();
   taskInput.value = '';
   categoryInput.value = '';
+  responsibleInput.value = '';
+  importanceInput.value = 'Alta';
+  priorityInput.value = 'Alta';
+  dueDateInput.value = '';
+
 }
 
 /** Cambia el estado de completada de una tarea */
@@ -138,9 +213,22 @@ function editTask(id) {
   input.focus();
 
   const saveEdit = () => {
+    const oldTask = { ...task };
+    task.text = input.value.trim();
+    const resp = prompt('Responsable', task.responsible || '');
+    if (resp !== null) task.responsible = resp.trim();
+    const imp = prompt('Importancia (Alta/Media/Baja)', task.importance || 'Alta');
+    if (imp !== null) task.importance = imp;
+    const pri = prompt('Prioridad (Alta/Media/Baja)', task.priority || 'Alta');
+    if (pri !== null) task.priority = pri;
+    const due = prompt('Fecha promesa (YYYY-MM-DD)', task.dueDate || '');
+    if (due !== null) task.dueDate = due;
+    undoStack.push({ action: 'edit', id, oldTask });
+
     const oldText = task.text;
     task.text = input.value.trim();
     undoStack.push({ action: 'edit', id, oldText });
+
     saveTasks();
     renderTasks();
   };
@@ -171,8 +259,11 @@ function undo() {
     const t = tasks.find(t => t.id === last.id);
     if (t) t.completed = !t.completed;
   } else if (last.action === 'edit') {
+    const index = tasks.findIndex(t => t.id === last.id);
+    if (index !== -1) tasks[index] = last.oldTask;
     const t = tasks.find(t => t.id === last.id);
     if (t) t.text = last.oldText;
+
   } else if (last.action === 'clear') {
     tasks = last.tasks;
   }
@@ -194,7 +285,7 @@ function initTheme() {
 
 // Eventos
 addButton.addEventListener('click', addTask);
-[taskInput, categoryInput].forEach(input =>
+[taskInput, categoryInput, responsibleInput, dueDateInput].forEach(input =>
   input.addEventListener('keydown', e => e.key === 'Enter' && addTask())
 );
 filterButtons.forEach(btn => btn.addEventListener('click', () => {
@@ -218,7 +309,7 @@ document.addEventListener('keydown', e => {
 });
 
 initTheme();
-=======
+
  * script.js - Logica de la lista de tareas (Todo List)
  * Permite agregar, completar y eliminar tareas.
  * Las tareas se guardan en localStorage para mantenerlas entre recargas.
