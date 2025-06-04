@@ -84,7 +84,8 @@ function createTaskElement(task) {
 /** Muestra las tareas aplicando filtros y orden */
 function renderTasks() {
   let filtered = tasks.filter(t => {
-    const matchFilter =
+  // Si Chart.js no se cargo (por ejemplo falta internet), evitamos errores
+  if (!statusCtx || !priorityCtx || typeof Chart === 'undefined') return;
       currentFilter === 'all' ||
       (currentFilter === 'completed' && t.completed) ||
       (currentFilter === 'pending' && !t.completed);

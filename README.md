@@ -1,7 +1,10 @@
 # JS_coursera Todo Example
 
 
-Esta versión muestra una aplicación de **lista de tareas** más completa escrita con HTML, CSS y JavaScript.
+ Las tareas se cargan automáticamente cada vez que abras la página.
+ Para ver las gráficas es necesario que la página pueda cargar **Chart.js** desde
+ Internet. Si no hay conexión, la aplicación seguirá funcionando pero las
+ gráficas no se mostrarán.
 Las tareas se almacenan en `localStorage` y la página funciona tanto en escritorio como en móviles.
 
 ## Archivos
