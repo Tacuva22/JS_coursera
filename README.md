@@ -1,7 +1,10 @@
 # JS_coursera Todo Example
 
 
-Esta versión muestra una aplicación de **lista de tareas** más completa escrita con HTML, CSS y JavaScript.
+ Las tareas se cargan automáticamente cada vez que abras la página.
+ Para ver las gráficas es necesario que la página pueda cargar **Chart.js** desde
+ Internet. Si no hay conexión, la aplicación seguirá funcionando pero las
+ gráficas no se mostrarán.
 Las tareas se almacenan en `localStorage` y la página funciona tanto en escritorio como en móviles.
 
 ## Archivos
@@ -9,8 +12,7 @@ Las tareas se almacenan en `localStorage` y la página funciona tanto en escrito
 - `style.css` – Estilos con Flexbox y modo oscuro.
 - `script.js` – Lógica para agregar, editar, filtrar y ordenar tareas.
 
-
-Desde la versión actual cada tarea incluye responsable, importancia, prioridad y una fecha promesa. La interfaz muestra dos gráficas con el estado y la prioridad de todas las tareas.
+Desde la versión actual cada tarea incluye responsable, importancia, prioridad y una fecha promesa. Al completarla se guarda automáticamente la fecha de cierre. La interfaz muestra dos gráficas con el estado y la prioridad de todas las tareas.
 
 
 ## Uso
@@ -24,6 +26,8 @@ Abre `todo.html` en tu navegador. Podrás:
 - Alternar entre modo claro y oscuro.
 - Ver contadores de tareas totales, completadas y pendientes.
 - Registrar responsable, importancia, prioridad y fecha promesa para cada tarea.
+- Al completar una tarea se guarda la fecha de cierre y se muestra junto a la promesa.
+
 - Colorear las tareas segun si estan vencidas, proximas o en tiempo.
 - Visualizar graficas de pastel con el estado y la prioridad de las tareas.
 

@@ -1,5 +1,4 @@
 /**
-
  * script.js - Logica avanzada para la lista de tareas
  * Permite agregar, editar, filtrar y ordenar tareas.
  * Las tareas se guardan en localStorage y se mantiene un historial para deshacer.
@@ -35,7 +34,6 @@ const priorityCtx = document.getElementById('priorityChart');
 let statusChart;
 let priorityChart;
 
-
 /** Guarda las tareas en localStorage */
 function saveTasks() {
   localStorage.setItem('tasks', JSON.stringify(tasks));
@@ -62,13 +60,9 @@ function createTaskElement(task) {
   const info = document.createElement('span');
   info.className = 'info';
   const due = task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'N/A';
-  info.innerHTML = `<strong>${task.text}</strong> <small>[${task.category || 'General'}]</small> <em>${new Date(task.createdAt).toLocaleString()}</em><br>Resp: ${task.responsible || '-'} | Imp: ${task.importance || '-'} | Pri: ${task.priority || '-'} | Promesa: ${due}`;
+  const closed = task.closedAt ? new Date(task.closedAt).toLocaleDateString() : '';
+  info.innerHTML = `<strong>${task.text}</strong> <small>[${task.category || 'General'}]</small> <em>${new Date(task.createdAt).toLocaleString()}</em><br>Resp: ${task.responsible || '-'} | Imp: ${task.importance || '-'} | Pri: ${task.priority || '-'} | Promesa: ${due}${closed ? ' | Cierre: ' + closed : ''}`;
 
-  if (task.completed) li.classList.add('completed');
-
-  const info = document.createElement('span');
-  info.className = 'info';
-  info.innerHTML = `<strong>${task.text}</strong> <small>[${task.category || 'General'}]</small> <em>${new Date(task.createdAt).toLocaleString()}</em>`;
   li.appendChild(info);
 
   const editBtn = document.createElement('button');
@@ -90,7 +84,8 @@ function createTaskElement(task) {
 /** Muestra las tareas aplicando filtros y orden */
 function renderTasks() {
   let filtered = tasks.filter(t => {
-    const matchFilter =
+  // Si Chart.js no se cargo (por ejemplo falta internet), evitamos errores
+  if (!statusCtx || !priorityCtx || typeof Chart === 'undefined') return;
       currentFilter === 'all' ||
       (currentFilter === 'completed' && t.completed) ||
       (currentFilter === 'pending' && !t.completed);
@@ -165,9 +160,10 @@ function addTask() {
     importance: importanceInput.value,
     priority: priorityInput.value,
     dueDate: dueDateInput.value,
-
     completed: false,
-    createdAt: Date.now()
+    createdAt: Date.now(),
+    closedAt: null
+
   };
   tasks.push(task);
   saveTasks();
@@ -185,8 +181,10 @@ function addTask() {
 function toggleTask(id) {
   const task = tasks.find(t => t.id === id);
   if (!task) return;
-  undoStack.push({ action: 'toggle', id });
+  undoStack.push({ action: 'toggle', id, prevCompleted: task.completed, prevClosedAt: task.closedAt });
   task.completed = !task.completed;
+  task.closedAt = task.completed ? Date.now() : null;
+
   saveTasks();
   renderTasks();
 }
@@ -225,10 +223,6 @@ function editTask(id) {
     if (due !== null) task.dueDate = due;
     undoStack.push({ action: 'edit', id, oldTask });
 
-    const oldText = task.text;
-    task.text = input.value.trim();
-    undoStack.push({ action: 'edit', id, oldText });
-
     saveTasks();
     renderTasks();
   };
@@ -257,12 +251,13 @@ function undo() {
     tasks.splice(last.index, 0, last.task);
   } else if (last.action === 'toggle') {
     const t = tasks.find(t => t.id === last.id);
-    if (t) t.completed = !t.completed;
+    if (t) {
+      t.completed = last.prevCompleted;
+      t.closedAt = last.prevClosedAt;
+    }
   } else if (last.action === 'edit') {
     const index = tasks.findIndex(t => t.id === last.id);
     if (index !== -1) tasks[index] = last.oldTask;
-    const t = tasks.find(t => t.id === last.id);
-    if (t) t.text = last.oldText;
 
   } else if (last.action === 'clear') {
     tasks = last.tasks;
@@ -309,6 +304,7 @@ document.addEventListener('keydown', e => {
 });
 
 initTheme();
+
 
  * script.js - Logica de la lista de tareas (Todo List)
  * Permite agregar, completar y eliminar tareas.
