@@ -12,23 +12,39 @@
     <button id="themeToggle" aria-label="Alternar modo claro/oscuro">🌗</button>
   </header>
 
+  <section class="summary">
+    <div class="counters">
+      <span id="totalCount">0 totales</span> |
+      <span id="completedCount">0 completadas</span> |
+      <span id="pendingCount">0 pendientes</span>
+    </div>
+    <div class="charts">
+      <canvas id="statusChart" width="200" height="200"></canvas>
+      <canvas id="priorityChart" width="200" height="200"></canvas>
+    </div>
+  </section>
+
+
   <section class="controls">
     <input type="text" id="searchInput" placeholder="Buscar...">
     <div class="new-task">
       <input type="text" id="taskInput" placeholder="Nueva tarea">
       <input type="text" id="categoryInput" placeholder="Categoría">
-      <input type="text" id="responsibleInput" placeholder="Responsable">
+      <input type="text" id="responsibleInput" placeholder="Responsable" required>
+
       <select id="importanceInput">
         <option value="Alta">Alta</option>
         <option value="Media">Media</option>
         <option value="Baja">Baja</option>
       </select>
-      <select id="priorityInput">
+      <select id="priorityInput" required>
+
         <option value="Alta">Alta</option>
         <option value="Media">Media</option>
         <option value="Baja">Baja</option>
       </select>
-      <input type="date" id="dueDateInput">
+      <input type="date" id="dueDateInput" required>
+
       <button id="addButton">Agregar</button>
     </div>
     <div class="filters">
@@ -50,18 +66,7 @@
     </div>
   </section>
 
-  <section class="counters">
-    <span id="totalCount">0 totales</span> |
-    <span id="completedCount">0 completadas</span> |
-    <span id="pendingCount">0 pendientes</span>
-  </section>
-
   <ul id="taskList" class="task-list"></ul>
-
-  <section class="charts">
-    <canvas id="statusChart" width="200" height="200"></canvas>
-    <canvas id="priorityChart" width="200" height="200"></canvas>
-  </section>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="script.js"></script>

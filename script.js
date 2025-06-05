@@ -1,10 +1,12 @@
 /**
  * script.js - Logica avanzada para la lista de tareas
  * Permite agregar, editar, filtrar y ordenar tareas.
- * Las tareas se guardan en localStorage y se mantiene un historial para deshacer.
- */
+ * Las tareas se almacenan en MySQL mediante un backend PHP.
+ * Se mantiene un historial local para deshacer cambios recientes.
+*/
+// Arreglo con las tareas obtenidas del servidor
+let tasks = [];
 
-let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
 let undoStack = [];
 let currentFilter = 'all';
 let sortBy = 'date';
@@ -34,10 +36,46 @@ const priorityCtx = document.getElementById('priorityChart');
 let statusChart;
 let priorityChart;
 
-/** Guarda las tareas en localStorage */
-function saveTasks() {
-  localStorage.setItem('tasks', JSON.stringify(tasks));
+/** Comunicacion con el backend PHP ------------------------------*/
+
+/** Carga todas las tareas desde el servidor */
+async function loadTasks() {
+  try {
+    const resp = await fetch('backend/tasks.php');
+    tasks = await resp.json();
+    renderTasks();
+  } catch (err) {
+    console.error('Error al cargar tareas', err);
+  }
 }
+
+/** Envía una tarea nueva al servidor */
+async function createTask(task) {
+  const resp = await fetch('backend/tasks.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(task)
+  });
+  const data = await resp.json();
+  task.id = data.id;
+}
+
+/** Actualiza una tarea existente */
+async function updateTask(task) {
+  await fetch('backend/tasks.php', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(task)
+  });
+}
+
+/** Elimina una tarea del servidor */
+async function deleteTask(id) {
+  await fetch(`backend/tasks.php?id=${id}`, { method: 'DELETE' });
+}
+
+/** Guarda la preferencia de tema */
+
 
 /** Guarda la preferencia de tema */
 function saveTheme() {
@@ -84,8 +122,8 @@ function createTaskElement(task) {
 /** Muestra las tareas aplicando filtros y orden */
 function renderTasks() {
   let filtered = tasks.filter(t => {
-  // Si Chart.js no se cargo (por ejemplo falta internet), evitamos errores
-  if (!statusCtx || !priorityCtx || typeof Chart === 'undefined') return;
+    const matchFilter =
+
       currentFilter === 'all' ||
       (currentFilter === 'completed' && t.completed) ||
       (currentFilter === 'pending' && !t.completed);
@@ -111,7 +149,9 @@ function renderTasks() {
 
 /** Actualiza las graficas de pastel */
 function updateCharts() {
-  if (!statusCtx || !priorityCtx) return;
+  // Si Chart.js no se cargo (por ejemplo falta internet), evitamos errores
+  if (!statusCtx || !priorityCtx || typeof Chart === 'undefined') return;
+
 
   const now = new Date();
   const overdue = tasks.filter(t => !t.completed && t.dueDate && new Date(t.dueDate) < now).length;
@@ -145,28 +185,32 @@ function updateCharts() {
     },
     options: { responsive: false }
   });
-
 }
 
 /** Agrega una nueva tarea */
-function addTask() {
+async function addTask() {
   const text = taskInput.value.trim();
-  if (!text) return;
+  const resp = responsibleInput.value.trim();
+  const due = dueDateInput.value;
+  const pri = priorityInput.value;
+  if (!text || !resp || !due || !pri) {
+    alert('Por favor ingresa responsable, prioridad y fecha promesa.');
+    return;
+  }
   const task = {
-    id: Date.now(),
     text,
     category: categoryInput.value.trim(),
-    responsible: responsibleInput.value.trim(),
+    responsible: resp,
     importance: importanceInput.value,
-    priority: priorityInput.value,
-    dueDate: dueDateInput.value,
+    priority: pri,
+    dueDate: due,
     completed: false,
     createdAt: Date.now(),
     closedAt: null
-
   };
+  await createTask(task);
   tasks.push(task);
-  saveTasks();
+
   renderTasks();
   taskInput.value = '';
   categoryInput.value = '';
@@ -174,33 +218,36 @@ function addTask() {
   importanceInput.value = 'Alta';
   priorityInput.value = 'Alta';
   dueDateInput.value = '';
-
 }
 
 /** Cambia el estado de completada de una tarea */
-function toggleTask(id) {
+async function toggleTask(id) {
+
   const task = tasks.find(t => t.id === id);
   if (!task) return;
   undoStack.push({ action: 'toggle', id, prevCompleted: task.completed, prevClosedAt: task.closedAt });
   task.completed = !task.completed;
   task.closedAt = task.completed ? Date.now() : null;
+  await updateTask(task);
 
-  saveTasks();
   renderTasks();
 }
 
 /** Elimina una tarea */
-function removeTask(id) {
+async function removeTask(id) {
+
   const index = tasks.findIndex(t => t.id === id);
   if (index === -1) return;
   const removed = tasks.splice(index, 1)[0];
   undoStack.push({ action: 'delete', task: removed, index });
-  saveTasks();
+  await deleteTask(id);
+
   renderTasks();
 }
 
 /** Edita el texto de una tarea */
-function editTask(id) {
+async function editTask(id) {
+
   const li = Array.from(taskList.children).find(el => +el.dataset.id === id);
   const task = tasks.find(t => t.id === id);
   if (!li || !task) return;
@@ -210,7 +257,8 @@ function editTask(id) {
   li.querySelector('.info').replaceWith(input);
   input.focus();
 
-  const saveEdit = () => {
+  const saveEdit = async () => {
+
     const oldTask = { ...task };
     task.text = input.value.trim();
     const resp = prompt('Responsable', task.responsible || '');
@@ -222,8 +270,8 @@ function editTask(id) {
     const due = prompt('Fecha promesa (YYYY-MM-DD)', task.dueDate || '');
     if (due !== null) task.dueDate = due;
     undoStack.push({ action: 'edit', id, oldTask });
+    await updateTask(task);
 
-    saveTasks();
     renderTasks();
   };
 
@@ -234,16 +282,18 @@ function editTask(id) {
 }
 
 /** Elimina todas las tareas */
-function clearAll() {
+async function clearAll() {
   if (tasks.length === 0) return;
   undoStack.push({ action: 'clear', tasks: [...tasks] });
   tasks = [];
-  saveTasks();
+  await fetch('backend/tasks.php', { method: 'DELETE' });
+
   renderTasks();
 }
 
 /** Deshace la ultima accion */
-function undo() {
+async function undo() {
+
   const last = undoStack.pop();
   if (!last) return;
 
@@ -263,8 +313,8 @@ function undo() {
     tasks = last.tasks;
   }
 
-  saveTasks();
-  renderTasks();
+  await loadTasks();
+
 }
 
 /** Inicializa el tema oscuro/claro */
@@ -304,76 +354,4 @@ document.addEventListener('keydown', e => {
 });
 
 initTheme();
-
-
- * script.js - Logica de la lista de tareas (Todo List)
- * Permite agregar, completar y eliminar tareas.
- * Las tareas se guardan en localStorage para mantenerlas entre recargas.
- */
-
-// Cargar tareas almacenadas o iniciar con una lista vacia
-let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
-
-// Referencias a elementos del DOM
-const taskInput = document.getElementById('taskInput');
-const taskList = document.getElementById('taskList');
-const addButton = document.getElementById('addButton');
-
-/**
- * Muestra las tareas en la pagina.
- */
-function renderTasks() {
-  taskList.innerHTML = '';
-  tasks.forEach((task, index) => {
-    const li = document.createElement('li');
-    li.textContent = task.text;
-
-    // Marcar visualmente la tarea completada
-    if (task.completed) {
-      li.classList.add('completed');
-    }
-
-    // Boton para completar o deshacer la tarea
-    const completeBtn = document.createElement('button');
-    completeBtn.textContent = task.completed ? 'Deshacer' : 'Completar';
-    completeBtn.addEventListener('click', () => {
-      tasks[index].completed = !tasks[index].completed;
-      saveTasks();
-      renderTasks();
-    });
-
-    // Boton para eliminar la tarea de la lista
-    const deleteBtn = document.createElement('button');
-    deleteBtn.textContent = 'Eliminar';
-    deleteBtn.addEventListener('click', () => {
-      tasks.splice(index, 1);
-      saveTasks();
-      renderTasks();
-    });
-
-    li.append(' ', completeBtn, ' ', deleteBtn);
-    taskList.appendChild(li);
-  });
-}
-
-/**
- * Guarda las tareas actuales en localStorage.
- */
-function saveTasks() {
-  localStorage.setItem('tasks', JSON.stringify(tasks));
-}
-
-// Registrar el evento para agregar nuevas tareas
-addButton.addEventListener('click', () => {
-  const text = taskInput.value.trim();
-  if (text) {
-    tasks.push({ text, completed: false });
-    saveTasks();
-    renderTasks();
-    taskInput.value = '';
-  }
-});
-
-// Mostrar tareas existentes al cargar la pagina
-
-renderTasks();
+loadTasks();

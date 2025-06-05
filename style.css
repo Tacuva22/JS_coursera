@@ -109,8 +109,21 @@ body {
 
 .charts {
   display: flex;
-  justify-content: center;
+  justify-content: flex-end;
   gap: 1em;
-  margin: 1em;
+  margin: 1em 0;
+}
+
+.summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 0 1em;
+  flex-wrap: wrap;
+}
+
+.summary .counters {
+  align-self: center;
+  margin-right: 1em;
 }
 
