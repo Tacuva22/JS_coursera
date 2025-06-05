@@ -1,3 +1,4 @@
+
 /* style.css - Estilos modernos para la lista de tareas */
 :root {
   --bg-color: #f4f4f4;
@@ -43,6 +44,7 @@ body {
 
 .new-task input,
 .new-task select {
+
   flex: 1;
   margin-right: 0.5em;
 }
@@ -124,3 +126,4 @@ body {
   align-self: center;
   margin-right: 1em;
 }
+

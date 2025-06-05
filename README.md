@@ -4,6 +4,9 @@ Esta versión muestra una aplicación de **lista de tareas** más completa escri
 Ahora incluye un pequeño backend en PHP que almacena las tareas en MySQL.
 La página funciona tanto en escritorio como en móviles.
 
+
+
+
 ## Archivos
 - `todo.html` – Estructura de la interfaz.
 - `style.css` – Estilos con Flexbox y modo oscuro.
@@ -11,6 +14,7 @@ La página funciona tanto en escritorio como en móviles.
 - Carpeta `backend/` – Scripts PHP y esquema SQL para almacenar tareas.
 
 Cada tarea debe registrar obligatoriamente el responsable, la prioridad y la fecha promesa. Al completarla se guarda automáticamente la fecha de cierre. En la parte superior se muestran dos gráficas con el estado y la prioridad de todas las tareas.
+
 
 ## Uso
 Abre `todo.html` en tu navegador. Podrás:
@@ -39,3 +43,5 @@ Abre `todo.html` en tu navegador. Podrás:
 3. Ejecuta un servidor PHP dentro de la carpeta `backend`:
    `php -S localhost:8000`.
 4. Abre `todo.html` y asegúrate de que el navegador pueda acceder a `http://localhost:8000/tasks.php`.
+
+

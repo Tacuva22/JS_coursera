@@ -6,6 +6,7 @@
 */
 // Arreglo con las tareas obtenidas del servidor
 let tasks = [];
+
 let undoStack = [];
 let currentFilter = 'all';
 let sortBy = 'date';
@@ -75,6 +76,7 @@ async function deleteTask(id) {
 
 /** Guarda la preferencia de tema */
 
+
 /** Guarda la preferencia de tema */
 function saveTheme() {
   localStorage.setItem('darkMode', document.body.classList.contains('dark'));
@@ -98,6 +100,7 @@ function createTaskElement(task) {
   const due = task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'N/A';
   const closed = task.closedAt ? new Date(task.closedAt).toLocaleDateString() : '';
   info.innerHTML = `<strong>${task.text}</strong> <small>[${task.category || 'General'}]</small> <em>${new Date(task.createdAt).toLocaleString()}</em><br>Resp: ${task.responsible || '-'} | Imp: ${task.importance || '-'} | Pri: ${task.priority || '-'} | Promesa: ${due}${closed ? ' | Cierre: ' + closed : ''}`;
+
   li.appendChild(info);
 
   const editBtn = document.createElement('button');
@@ -120,6 +123,7 @@ function createTaskElement(task) {
 function renderTasks() {
   let filtered = tasks.filter(t => {
     const matchFilter =
+
       currentFilter === 'all' ||
       (currentFilter === 'completed' && t.completed) ||
       (currentFilter === 'pending' && !t.completed);
@@ -147,6 +151,7 @@ function renderTasks() {
 function updateCharts() {
   // Si Chart.js no se cargo (por ejemplo falta internet), evitamos errores
   if (!statusCtx || !priorityCtx || typeof Chart === 'undefined') return;
+
 
   const now = new Date();
   const overdue = tasks.filter(t => !t.completed && t.dueDate && new Date(t.dueDate) < now).length;
@@ -205,6 +210,7 @@ async function addTask() {
   };
   await createTask(task);
   tasks.push(task);
+
   renderTasks();
   taskInput.value = '';
   categoryInput.value = '';
@@ -216,27 +222,32 @@ async function addTask() {
 
 /** Cambia el estado de completada de una tarea */
 async function toggleTask(id) {
+
   const task = tasks.find(t => t.id === id);
   if (!task) return;
   undoStack.push({ action: 'toggle', id, prevCompleted: task.completed, prevClosedAt: task.closedAt });
   task.completed = !task.completed;
   task.closedAt = task.completed ? Date.now() : null;
   await updateTask(task);
+
   renderTasks();
 }
 
 /** Elimina una tarea */
 async function removeTask(id) {
+
   const index = tasks.findIndex(t => t.id === id);
   if (index === -1) return;
   const removed = tasks.splice(index, 1)[0];
   undoStack.push({ action: 'delete', task: removed, index });
   await deleteTask(id);
+
   renderTasks();
 }
 
 /** Edita el texto de una tarea */
 async function editTask(id) {
+
   const li = Array.from(taskList.children).find(el => +el.dataset.id === id);
   const task = tasks.find(t => t.id === id);
   if (!li || !task) return;
@@ -247,6 +258,7 @@ async function editTask(id) {
   input.focus();
 
   const saveEdit = async () => {
+
     const oldTask = { ...task };
     task.text = input.value.trim();
     const resp = prompt('Responsable', task.responsible || '');
@@ -259,6 +271,7 @@ async function editTask(id) {
     if (due !== null) task.dueDate = due;
     undoStack.push({ action: 'edit', id, oldTask });
     await updateTask(task);
+
     renderTasks();
   };
 
@@ -274,11 +287,13 @@ async function clearAll() {
   undoStack.push({ action: 'clear', tasks: [...tasks] });
   tasks = [];
   await fetch('backend/tasks.php', { method: 'DELETE' });
+
   renderTasks();
 }
 
 /** Deshace la ultima accion */
 async function undo() {
+
   const last = undoStack.pop();
   if (!last) return;
 
@@ -293,11 +308,13 @@ async function undo() {
   } else if (last.action === 'edit') {
     const index = tasks.findIndex(t => t.id === last.id);
     if (index !== -1) tasks[index] = last.oldTask;
+
   } else if (last.action === 'clear') {
     tasks = last.tasks;
   }
 
   await loadTasks();
+
 }
 
 /** Inicializa el tema oscuro/claro */

@@ -24,23 +24,27 @@
     </div>
   </section>
 
+
   <section class="controls">
     <input type="text" id="searchInput" placeholder="Buscar...">
     <div class="new-task">
       <input type="text" id="taskInput" placeholder="Nueva tarea">
       <input type="text" id="categoryInput" placeholder="Categoría">
       <input type="text" id="responsibleInput" placeholder="Responsable" required>
+
       <select id="importanceInput">
         <option value="Alta">Alta</option>
         <option value="Media">Media</option>
         <option value="Baja">Baja</option>
       </select>
       <select id="priorityInput" required>
+
         <option value="Alta">Alta</option>
         <option value="Media">Media</option>
         <option value="Baja">Baja</option>
       </select>
       <input type="date" id="dueDateInput" required>
+
       <button id="addButton">Agregar</button>
     </div>
     <div class="filters">
@@ -66,5 +70,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="script.js"></script>
+
 </body>
 </html>
